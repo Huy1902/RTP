@@ -21,3 +21,29 @@
   - ![alt text](image.png)
   - Packet structure:
     ![alt text](image-1.png)
+
+
+### Part 2:
+
+- [ ] Handle START packet
+
+- [ ] Check connection is started (ignore START messages)
+
+- [ ] Check sum for each packet
+
+- [ ] Packet handling: Sliding window track expected sequence number and buffer within
+window
+  - [ ] Unlike expected: buffer
+  - [ ] Like expected: in-order deliver
+  - [ ] Drop all package outsize window
+  - [ ] Cumulative ACKs
+
+- [ ] Exit with END message
+
+ 4. **Buffering and In-Order Delivery**: The receiver should buffer out-of-order packets within the window and deliver them in order once the missing packets arrive.
+
+- 5. **Handling END Packet**: Upon receiving an END packet (type 1), send an ACK and terminate after sending the final ACK.
+
+
+- ***Note***:
+  - Handle only one `sender` at a time

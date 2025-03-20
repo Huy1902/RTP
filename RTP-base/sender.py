@@ -4,9 +4,17 @@ import sys
 import time
 from collections import OrderedDict
 
-from utils import PacketHeader, compute_checksum, verify_checksum
+from utils import PacketHeader, compute_checksum
 
 buffer_size = 1472
+
+def verify_checksum(header, payload):
+    """Verify packet checksum"""
+    saved_checksum = header.checksum
+    header.checksum = 0
+    calculated = compute_checksum(bytes(header) + payload)
+    header.checksum = saved_checksum
+    return calculated == saved_checksum
 
 def sender(receiver_ip, receiver_port, window_size):
     """
@@ -15,7 +23,7 @@ def sender(receiver_ip, receiver_port, window_size):
     """TODO: Open socket and send message from sys.stdin."""
     # Create a UDP socket
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    s.timeout(0.5)
+    s.settimeout(0.5)
     
     # Handshake with START packet
     start_header = PacketHeader(
@@ -34,9 +42,9 @@ def sender(receiver_ip, receiver_port, window_size):
             ack_header = PacketHeader.from_bytes(ack_data[:16])
             if(ack_header.type == 3 and #ACK type
                 ack_header.seq_num == 1 
-                and verify_checksum(ack_header)):
+                and verify_checksum(ack_header, b'')):
                 break
-        except (s.timeout, ValueError):
+        except (socket.timeout, ValueError):
             continue
         
     # Data transmission
@@ -49,7 +57,10 @@ def sender(receiver_ip, receiver_port, window_size):
     next_seq_num = 1
     packets = OrderedDict()
     
+    print(f"Sending {n_packets} packets")
+    
     while start <= n_packets:
+        
         while next_seq_num < start + window_size and next_seq_num <= n_packets:
             # chunks start from 0
             chunk = chunks[next_seq_num-1]
@@ -72,6 +83,7 @@ def sender(receiver_ip, receiver_port, window_size):
             
         # Wait for ACKs
         try:
+            print("Waiting for ACKs")
             ack_data, _ = s.recvfrom(buffer_size)
             ack_header = PacketHeader.from_bytes(ack_data[:16])
             
@@ -84,7 +96,7 @@ def sender(receiver_ip, receiver_port, window_size):
                         if start in packets:
                             del packets[start]
                         start += 1
-        except (s.timeout,ValueError):
+        except (socket.timeout,ValueError):
             # If timeout occurs, resend all packets in window
             for seq in range(start, min(start + window_size, next_seq_num)):
                 if seq in packets:

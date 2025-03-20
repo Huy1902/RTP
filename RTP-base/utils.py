@@ -25,11 +25,3 @@ def compute_checksum(pkt):
     Used to detect errors in transmitted packets.
     '''
     return binascii.crc32(bytes(pkt)) & 0xFFFFFFFF
-
-def verify_checksum(pkt):
-    '''
-    Verify the checksum of the packet.
-    
-    Used to detect errors in transmitted packets.
-    '''
-    return compute_checksum(pkt) == pkt.checksum

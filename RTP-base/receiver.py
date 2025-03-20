@@ -1,29 +1,121 @@
 import argparse
 import socket
+from collections import defaultdict
+import sys
 
 from utils import PacketHeader, compute_checksum
 
+buffer_size = 1472
+
+
+def verify_checksum(header, payload):
+    """Verify packet checksum"""
+    saved_checksum = header.checksum
+    header.checksum = 0
+    calculated = compute_checksum(bytes(header) + payload)
+    header.checksum = saved_checksum
+    return calculated == saved_checksum
 
 def receiver(receiver_ip, receiver_port, window_size):
     """TODO: Listen on socket and print received message to sys.stdout."""
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    
+    s.settimeout(0.5)
     s.bind((receiver_ip, receiver_port))
+    
+    expected_seq_num = 0
+    data_buffer = defaultdict(bytes) # Avoid key error
+    received_data = bytearray()
+    connection_established = False # Ensure only one sender can connect
+    
+    # Support function to send ACK
+    def send_ack(ack_seq_num, address):
+        ack_header = PacketHeader(
+            type=3,
+            seq_num=ack_seq_num,
+            length=0,
+            checksum=0
+        )
+        ack_header.checksum = compute_checksum(bytes(ack_header) + b'')
+        s.sendto(bytes(ack_header), address)
+    
+    print("Receiver is listening")
+    
     while True:
-        # Receive packet; address includes both IP and port
-        pkt, address = s.recvfrom(2048)
+        print("Waiting for package")
+        try:
+            package, address = s.recvfrom(buffer_size)
+        except socket.timeout:
+            continue
+        
+        # Check valid package
+        if (len(package) < 16):
+            continue
+        
+        try:
+            header = PacketHeader.from_bytes(package[:16])
+        except: # Wrong format
+            continue
+        
+        # Ensure payload only contains data
+        payload = package[16:16+header.length]
+        
+        # Drop package if checksum is invalid
+        if not verify_checksum(header, payload):
+            if connection_established:
+                send_ack(expected_seq_num, address)
+            continue
+        
+        # Start handshake
+        if header.type == 0 and not connection_established:
+            if header.seq_num == 0:
+                send_ack(1, address)
+                connection_established = True
+                expected_seq_num = 1
+            continue
+        
+        # Data transmission
+        if header.type == 2 and connection_established:
+            seq_num = header.seq_num
+            
+            if seq_num < expected_seq_num:
+                send_ack(expected_seq_num, address)
+            elif seq_num < expected_seq_num + window_size:
+                if seq_num not in data_buffer:
+                    data_buffer[seq_num] = payload
+                
+                # In order delivery
+                while expected_seq_num in data_buffer:
+                    received_data.extend(data_buffer[expected_seq_num])
+                    del data_buffer[expected_seq_num]
+                    expected_seq_num += 1
+            # Drop out of window packets seq_num >= expected_seq_num + window_size case
+            
+                send_ack(expected_seq_num, address)
+            
+        # End handshake
+        if header.type == 1 and connection_established:
+            if header.seq_num == expected_seq_num:
+                send_ack(expected_seq_num + 1, address)
+                sys.stdout.buffer.write(received_data)
+                sys.stdout.buffer.flush()
+                break
+            
+    s.close()
+    # while True:
+    #     # Receive packet; address includes both IP and port
+    #     pkt, address = s.recvfrom(2048)
 
-        # Extract header and payload
-        pkt_header = PacketHeader(pkt[:16])
-        msg = pkt[16 : 16 + pkt_header.length]
+    #     # Extract header and payload
+    #     pkt_header = PacketHeader(pkt[:16])
+    #     msg = pkt[16 : 16 + pkt_header.length]
 
-        # Verity checksum
-        pkt_checksum = pkt_header.checksum
-        pkt_header.checksum = 0
-        computed_checksum = compute_checksum(pkt_header / msg)
-        if pkt_checksum != computed_checksum:
-            print("checksums not match")
-        print(msg)
+    #     # Verity checksum
+    #     pkt_checksum = pkt_header.checksum
+    #     pkt_header.checksum = 0
+    #     computed_checksum = compute_checksum(pkt_header / msg)
+    #     if pkt_checksum != computed_checksum:
+    #         print("checksums not match")
+    #     print(msg)
 
 
 def main():
