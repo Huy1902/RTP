@@ -7,6 +7,7 @@ from utils import PacketHeader, compute_checksum
 def receiver(receiver_ip, receiver_port, window_size):
     """TODO: Listen on socket and print received message to sys.stdout."""
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    
     s.bind((receiver_ip, receiver_port))
     while True:
         # Receive packet; address includes both IP and port
