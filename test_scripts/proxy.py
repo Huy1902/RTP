@@ -103,6 +103,7 @@ def main():
                 sender_port.append(address[1])
             pkt_type, seq_num = get_seq_num(pkt)
             print(f"Got it: No messing. {pkt_type}: {seq_num}")
+            print(f"Forwarding packet from {from_addr}:{from_port} to {to_addr}:{to_port}")
             to_socket.sendto(pkt, (to_addr, to_port))
         else:
             mode = int(options[random.randrange(len(options))])

@@ -6,7 +6,7 @@ import sys
 from utils import PacketHeader, compute_checksum
 
 buffer_size = 1472
-
+no_port = -1000
 
 def verify_checksum(header, payload):
     """Verify packet checksum"""
@@ -15,6 +15,8 @@ def verify_checksum(header, payload):
     calculated = compute_checksum(bytes(header) + payload)
     header.checksum = saved_checksum
     return calculated == saved_checksum
+
+    
 
 def receiver(receiver_ip, receiver_port, window_size):
     """TODO: Listen on socket and print received message to sys.stdout."""
@@ -25,7 +27,7 @@ def receiver(receiver_ip, receiver_port, window_size):
     expected_seq_num = 0
     data_buffer = defaultdict(bytes) # Avoid key error
     received_data = bytearray()
-    connection_established = False # Ensure only one sender can connect
+    connection_established = no_port # Ensure only one sender can connect
     
     # Support function to send ACK
     def send_ack(ack_seq_num, address):
@@ -35,7 +37,7 @@ def receiver(receiver_ip, receiver_port, window_size):
             length=0,
             checksum=0
         )
-        ack_header.checksum = compute_checksum(bytes(ack_header) + b'')
+        ack_header.checksum = compute_checksum(ack_header)
         s.sendto(bytes(ack_header), address)
     
     print("Receiver is listening")
@@ -45,35 +47,51 @@ def receiver(receiver_ip, receiver_port, window_size):
         try:
             package, address = s.recvfrom(buffer_size)
         except socket.timeout:
+            print("Timeout when waiting package")
             continue
         
+        print("Received package")
         # Check valid package
         if (len(package) < 16):
+            print("Invalid length packet")
             continue
         
         try:
-            header = PacketHeader.from_bytes(package[:16])
+            header = PacketHeader(package[:16])
         except: # Wrong format
+            print("Wrong format packet")
             continue
         
         # Ensure payload only contains data
+        print(f"Received package type: {header.type} Reading payload")
         payload = package[16:16+header.length]
         
         # Drop package if checksum is invalid
         if not verify_checksum(header, payload):
-            if connection_established:
+            print(f"Invalid checksum: {header.checksum}")
+            if connection_established == address:
                 send_ack(expected_seq_num, address)
             continue
         
+        print("Valid package")
+        
         # Start handshake
-        if header.type == 0 and not connection_established:
+        if header.type == 0 and not connection_established == address:
+            print("Start handshake")
             if header.seq_num == 0:
                 send_ack(1, address)
-                connection_established = True
+                connection_established = address
                 expected_seq_num = 1
             continue
         
+        if header.type == 0 and connection_established == address:
+            if header.seq_num == 0: # Resend ACK
+                print("Resend start ACK")
+                send_ack(1, address)
+                continue
+    
         # Data transmission
+        print("Data transmission")
         if header.type == 2 and connection_established:
             seq_num = header.seq_num
             

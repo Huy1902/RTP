@@ -8,13 +8,11 @@ from utils import PacketHeader, compute_checksum
 
 buffer_size = 1472
 
-def verify_checksum(header, payload):
+def verify_checksum(header):
     """Verify packet checksum"""
     saved_checksum = header.checksum
     header.checksum = 0
-    calculated = compute_checksum(bytes(header) + payload)
-    header.checksum = saved_checksum
-    return calculated == saved_checksum
+    return compute_checksum(header) == saved_checksum
 
 def sender(receiver_ip, receiver_port, window_size):
     """
@@ -32,21 +30,27 @@ def sender(receiver_ip, receiver_port, window_size):
         length=0,
         checksum=0
     )
-    start_header.checksum = compute_checksum(start_header)
+    start_header.checksum = compute_checksum(bytes(start_header) + b'')
     
     # Send START until ACK is received
     while True:
+        print("Sending START")
         s.sendto(bytes(start_header), (receiver_ip, receiver_port))
         try:
+            print("Waiting for ACK at start")
             ack_data, _ = s.recvfrom(buffer_size)
-            ack_header = PacketHeader.from_bytes(ack_data[:16])
+            ack_header = PacketHeader(ack_data[:16])
             if(ack_header.type == 3 and #ACK type
-                ack_header.seq_num == 1 
-                and verify_checksum(ack_header, b'')):
-                break
+                ack_header.seq_num == 1):
+                    if(verify_checksum(ack_header)):
+                        break
+                    else:
+                        print("Invalid checksum for start ACK")
         except (socket.timeout, ValueError):
+            print("Timeout when waiting for ACK")
             continue
-        
+    
+    print("Connection established")
     # Data transmission
     data = sys.stdin.buffer.read()
     chunks = [data[i:i+buffer_size] for i in range(0, len(data), buffer_size)]
@@ -73,6 +77,7 @@ def sender(receiver_ip, receiver_port, window_size):
             # Compute checksum like tutorial
             packet = bytes(header) + chunk
             header.checksum = compute_checksum(packet)
+            print(f"Sending packet {next_seq_num} with {header.checksum}")
             
             s.sendto(packet, (receiver_ip, receiver_port))
             
@@ -83,9 +88,9 @@ def sender(receiver_ip, receiver_port, window_size):
             
         # Wait for ACKs
         try:
-            print("Waiting for ACKs")
+            print(f"Waiting for ACKs at {next_seq_num}")
             ack_data, _ = s.recvfrom(buffer_size)
-            ack_header = PacketHeader.from_bytes(ack_data[:16])
+            ack_header = PacketHeader(ack_data[:16])
             
             if ack_header.type == 3 and verify_checksum(ack_header):
                 # Move window
@@ -98,10 +103,11 @@ def sender(receiver_ip, receiver_port, window_size):
                         start += 1
         except (socket.timeout,ValueError):
             # If timeout occurs, resend all packets in window
-            for seq in range(start, min(start + window_size, next_seq_num)):
-                if seq in packets:
-                    packet, _ = packets[seq]
-                    s.sendto(packet, (receiver_ip, receiver_port))
+            next_seq_num = start
+            # for seq in range(start, min(start + window_size, next_seq_num)):
+            #     if seq in packets:
+            #         packet, _ = packets[seq]
+            #         s.sendto(packet, (receiver_ip, receiver_port))
         
     # END handshake
     end_seq_num = n_packets + 1
