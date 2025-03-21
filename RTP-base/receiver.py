@@ -122,7 +122,7 @@ def receiver(receiver_ip, receiver_port, window_size):
     s.close()
     # while True:
     #     # Receive packet; address includes both IP and port
-    #     pkt, address = s.recvfrom(2048)
+
 
     #     # Extract header and payload
     #     pkt_header = PacketHeader(pkt[:16])

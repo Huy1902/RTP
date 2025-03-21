@@ -1,6 +1,8 @@
 # RTP
  Computer Network Project
 
+## My report at [here](report/report.md)
+
 ### Part 1:
 - [x] Send START packet (type 0, seq_num 0) and wait for ACK (type 3, seq_num 1).
 
@@ -25,20 +27,20 @@
 
 ### Part 2:
 
-- [ ] Handle START packet
+- [x] Handle START packet
 
-- [ ] Check connection is started (ignore START messages)
+- [x] Check connection is started (ignore START messages)
 
-- [ ] Check sum for each packet
+- [x] Check sum for each packet
 
-- [ ] Packet handling: Sliding window track expected sequence number and buffer within
+- [x] Packet handling: Sliding window track expected sequence number and buffer within
 window
-  - [ ] Unlike expected: buffer
-  - [ ] Like expected: in-order deliver
-  - [ ] Drop all package outsize window
-  - [ ] Cumulative ACKs
+  - [x] Unlike expected: buffer
+  - [x] Like expected: in-order deliver
+  - [x] Drop all package outsize window
+  - [x] Cumulative ACKs
 
-- [ ] Exit with END message
+- [x] Exit with END message
 
  4. **Buffering and In-Order Delivery**: The receiver should buffer out-of-order packets within the window and deliver them in order once the missing packets arrive.
 
@@ -47,3 +49,22 @@ window
 
 - ***Note***:
   - Handle only one `sender` at a time
+
+### Part 3:
+- [x] Modify the receiver to send individual ACKs for each DATA/END packet instead of cumulative ACKs.
+- [x] Replace the sliding window logic to track individual ACKs
+
+
+### Self-grade
+- [x] 60: RTP-base passes test
+
+  - [x]  10: built on top of UDP (doesn't use TCP sockets)
+  - [x]  15: correctly implement cumulative ACK
+  - [x]  15: correctly implement timeout and retransmission
+  - [x]  20: correct received message
+
+- [x] 40: RTP-opt passes test
+
+  - [x]  15: doesn't send cumulative ACKs
+  - [x]  15: correctly implement timeout and retransmission
+  - [x]  10: correct received message

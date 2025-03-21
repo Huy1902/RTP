@@ -105,11 +105,11 @@ def sender(receiver_ip, receiver_port, window_size):
                         start += 1
         except (socket.timeout,ValueError):
             # If timeout occurs, resend all packets in window
-            next_seq_num = start
-            # for seq in range(start, min(start + window_size, next_seq_num)):
-            #     if seq in packets:
-            #         packet, _ = packets[seq]
-            #         s.sendto(packet, (receiver_ip, receiver_port))
+            # next_seq_num = start
+            for seq in range(start, min(start + window_size, next_seq_num)):
+                if seq in packets:
+                    packet, _ = packets[seq]
+                    s.sendto(packet, (receiver_ip, receiver_port))
         
     # END handshake
     end_seq_num = n_packets + 1
