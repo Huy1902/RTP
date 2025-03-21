@@ -9,8 +9,9 @@ Nguyen Quoc Huy
 I do it myself
 
 ## Report
-(None)
+[Pdf](report/23020082_RTP_project.pdf)
 
+[Google slide](https://docs.google.com/presentation/d/1u8S3ySupFE9vEKIR7YniosVlfD5eMjzdlkJGjSaFX3U/edit?usp=sharing)
 ## Citations
 All citations will be included in my report
 
@@ -28,4 +29,6 @@ All citations will be included in my report
   - [x]  15: correctly implement timeout and retransmission
   - [x]  10: correct received message
 
-## Extra credit attempted (if any)
+## Extra credit attempted
+- Optimize through making use of data structure
+- Investing some further work
