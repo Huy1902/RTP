@@ -6,7 +6,8 @@ from collections import OrderedDict
 
 from utils import PacketHeader, compute_checksum
 
-buffer_size = 1472
+chunk_size = 1472 - 16 # 1472 is the maximum size of a packet
+buffer_size = 2048
 
 def verify_checksum(header):
     """Verify packet checksum"""
@@ -53,7 +54,7 @@ def sender(receiver_ip, receiver_port, window_size):
     print("Connection established")
     # Data transmission
     data = sys.stdin.buffer.read()
-    chunks = [data[i:i+buffer_size] for i in range(0, len(data), buffer_size)]
+    chunks = [data[i:i+chunk_size] for i in range(0, len(data), chunk_size)]
     n_packets = len(chunks)
     
     # Sliding window mechanism implementation
@@ -75,11 +76,12 @@ def sender(receiver_ip, receiver_port, window_size):
                 checksum=0
             )
             # Compute checksum like tutorial
+            header.checksum = compute_checksum(bytes(header) + chunk)
             packet = bytes(header) + chunk
-            header.checksum = compute_checksum(packet)
+
             print(f"Sending packet {next_seq_num} with {header.checksum}")
             
-            s.sendto(packet, (receiver_ip, receiver_port))
+            s.sendto(bytes(packet), (receiver_ip, receiver_port))
             
             # Store packet in order to resend if necessary, get time.time() to 
             # have different values for each packet
@@ -123,13 +125,15 @@ def sender(receiver_ip, receiver_port, window_size):
     while time.time() < end_time:
         s.sendto(bytes(end_header), (receiver_ip, receiver_port))
         try:
+            print("Waiting for END ACK")
             ack_data, _ = s.recvfrom(buffer_size)
-            ack_header = PacketHeader.from_bytes(ack_data[:16])
+            ack_header = PacketHeader(ack_data[:16])
             if (ack_header.type == 3 
                 and ack_header.seq_num == end_seq_num  + 1
                 and verify_checksum(ack_header)):
+                print("Connection closed")
                 break
-        except (s.timeout, ValueError):
+        except (socket.timeout, ValueError):
             continue
     
     # pkt_header = PacketHeader(type=2, seq_num=10, length=14)
