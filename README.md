@@ -20,9 +20,9 @@
 - ***Note***:
   - 500ms retransmission timer: resend if no ACK is received
   - Window size: maximum number of unacknowledged packets the sender can transmit before waiting for ACKs
-  - ![alt text](image.png)
+  - ![alt text](resource/image.png)
   - Packet structure:
-    ![alt text](image-1.png)
+    ![alt text](resource/image-1.png)
 
 
 ### Part 2:
