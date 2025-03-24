@@ -1,5 +1,5 @@
 # RTP
- Computer Network Project
+Computer Network Project
 
 ## My report at [here](report/report.md)
 
@@ -55,16 +55,38 @@ window
 - [x] Replace the sliding window logic to track individual ACKs
 
 
-### Self-grade
-- [x] 60: RTP-base passes test
 
-  - [x]  10: built on top of UDP (doesn't use TCP sockets)
-  - [x]  15: correctly implement cumulative ACK
-  - [x]  15: correctly implement timeout and retransmission
-  - [x]  20: correct received message
+## Socket
 
-- [x] 40: RTP-opt passes test
+### My checklist
+- [x] Build basic socket from book “Computer Networking: A Top-Down Approach, Global Edition, 8th Edition”
 
-  - [x]  15: doesn't send cumulative ACKs
-  - [x]  15: correctly implement timeout and retransmission
-  - [x]  10: correct received message
+- [x] Socket wrapper
+  - [x] Sender socket (inspired by sender)
+  - [x] Receiver socket (inspired by receiver)
+  - [x] [Test](#Testing-receiver-and-sender)
+
+- [ ] Client-server program
+  - [ ] Server side
+  - [ ] Client side
+  - [ ] [Test](#Testing-client-and-server)
+
+#### Testing receiver and sender
+```sh
+cd UDP-RTP
+# Receiver
+python receiver.py localhost 40000 128 > output.txt
+
+# Proxy
+python proxy.py localhost 50000 localhost 40000 0123
+
+# Sender
+python sender.py localhost 50000 128 < test_message.txt
+
+# Verify
+diff output.txt test_message.txt
+```
+***Remember*** run them on different bash
+
+
+#### Testing client and server

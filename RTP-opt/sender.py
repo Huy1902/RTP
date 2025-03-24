@@ -2,7 +2,6 @@ import argparse
 import socket
 import sys
 import time
-from collections import OrderedDict
 
 from utils import PacketHeader, compute_checksum
 

@@ -59,7 +59,7 @@ def receiver(receiver_ip, receiver_port, window_size):
         
         try:
             header = PacketHeader(package[:16])
-        except: # Wrong format
+        except ValueError: # Wrong format
             # print("Wrong format packet")
             continue
         
