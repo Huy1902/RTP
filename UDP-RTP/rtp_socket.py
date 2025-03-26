@@ -7,6 +7,7 @@ from collections import defaultdict
 class RTPSenderSocket:
     def __init__(self, window_size=128):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) 
         self.sock.settimeout(0.5)
         self.window_size = window_size
         self.seq_num = 0
@@ -14,7 +15,7 @@ class RTPSenderSocket:
         self.buffer_size = 2048
         self.chunk_size = 1472 - 16  # 1472 is the maximum size of a packet
         self.n_packets = None
-
+    
     def verify_checksum(self, header):
         """Verify packet checksum"""
         saved_checksum = header.checksum
@@ -51,7 +52,6 @@ class RTPSenderSocket:
             except (socket.timeout, ValueError):
                 print("Timeout when waiting for ACK")
                 continue
-
         print("Connection established")
 
     def send(self, data):
@@ -108,6 +108,7 @@ class RTPSenderSocket:
             except (socket.timeout, ValueError):
                 # retransmit packets
                 pass
+        
 
     def close(self):
         """Terminate connection with END packet."""
@@ -136,11 +137,13 @@ class RTPSenderSocket:
                     break
             except (socket.timeout, ValueError):
                 pass
+        self.sock.close()
 
 
 class RTPReceiverSocket:
     def __init__(self, window_size=128):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) 
         self.sock.settimeout(0.5)
         self.window_size = window_size
         self.buffer_size = 2048
@@ -252,7 +255,7 @@ class RTPReceiverSocket:
                 if header.seq_num == start_seq_num:
                     self.send_ack(start_seq_num + 1, address)
                     break
-        return received_data        
+        return received_data, address        
         
 
     def close(self):

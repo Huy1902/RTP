@@ -9,6 +9,6 @@ message = input('Input lowercase sentence: ')
 clientSocket.sendto(message.encode(), (serverName, serverPort))
 
 modifiedMessage, serverAddress = clientSocket.recvfrom(2048)
-print(f'From {serverAddress}: {modifiedMessage.decode()}')
+print(f'From Server: {modifiedMessage.decode()}')
 
 clientSocket.close()
