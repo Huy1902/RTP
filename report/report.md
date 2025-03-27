@@ -13,7 +13,7 @@ I do it myself
 
 [Google slide - RTP](https://docs.google.com/presentation/d/1u8S3ySupFE9vEKIR7YniosVlfD5eMjzdlkJGjSaFX3U/edit?usp=sharing)
 
-[Google slide - Socket] (https://docs.google.com/presentation/d/1v_uZdOnBx7bOiwOHKN0nSj1kIhdsfxAsHE5kUArKnv8/edit?usp=sharing)
+[Google slide - Socket](https://docs.google.com/presentation/d/1v_uZdOnBx7bOiwOHKN0nSj1kIhdsfxAsHE5kUArKnv8/edit?usp=sharing)
 
 ## Citations
 All citations will be included in my report

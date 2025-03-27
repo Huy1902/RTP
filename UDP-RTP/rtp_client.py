@@ -1,5 +1,6 @@
 from rtp_socket import RTPSenderSocket, RTPReceiverSocket
 import socket
+import sys
 
 serverName = 'localhost'
 serverPort = 40000  # Corrected port
@@ -8,8 +9,9 @@ serverPort = 40000  # Corrected port
 client_sender = RTPSenderSocket()
 client_sender.connect(serverName, serverPort)
 
-message = input('Input lowercase sentence: ')
-client_sender.send(message.encode())
+# message = input('Input lowercase sentence: ')
+message = sys.stdin.buffer.read()
+client_sender.send(message)
 
 # Get the sender's port before closing
 sender_port = client_sender.sock.getsockname()[1]  # Uncommented line

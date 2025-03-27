@@ -66,10 +66,10 @@ window
   - [x] Receiver socket (inspired by receiver)
   - [x] [Test](#Testing-receiver-and-sender)
 
-- [ ] Client-server program
-  - [ ] Server side
-  - [ ] Client side
-  - [ ] [Test](#Testing-client-and-server)
+- [x] Client-server program
+  - [x] Server side
+  - [x] Client side
+  - [x] [Test](#Testing-client-and-server)
 
 #### Testing receiver and sender
 ```sh
@@ -90,3 +90,14 @@ diff output.txt test_message.txt
 
 
 #### Testing client and server
+```sh
+cd UDP-RTP
+# Receiver
+python rtp_server.py > output.txt
+
+# Sender
+python rtp_client.py < test_message.txt
+
+# # Verify
+# diff output.txt test_message.txt
+```
